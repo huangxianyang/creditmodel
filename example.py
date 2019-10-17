@@ -3,15 +3,17 @@
 评分卡示例:
 0.数据探索分析,1.数据清洗,2.特征分箱,3.特征选择,4.模型训练,5.评分卡构建,6.模型评估,7.模型报告
 """
-import pandas as pd
 from sklearn.externals import joblib
 import riskscore as rs
-from data.datapre import all_feature,num_col,cat_col,sub_col,rep_dict,int_col
+
 file = './result/'
 # 导入数据
-german = pd.read_csv("./data/germancredit.csv",encoding='utf-8',sep=' ',header=None,names=all_feature+["target"])
-print(german.head())
+germancredit = rs.Germancredit()
+german = germancredit.get_data()
+print("数据描述:", germancredit.get_describe())
+print("数据样例:", german.head())
 
+# 预处理变量
 ########################################
 # 0.数据探索分析
 #######################################
@@ -37,27 +39,27 @@ pr = rs.Preprocess()
 # num_col,cat_col = pr.split_col(df=german,no_split=['creditability'],min_size=4)
 # print("number:",num_col,"\n","category:",cat_col)
 # 数值化
-for col in sub_col:
+for col in germancredit.sub_col:
     german[col] = german[col].apply(lambda x:int(str(x)[1:]))
 # 替换
-german = pr.replace_str(df=german,replace_dict=rep_dict)
+german = pr.replace_str(df=german,replace_dict=germancredit.rep_dict)
 # 连续变量中特殊字符检测
-str_set = pr.find_str(df=german,num_col=num_col)
+str_set = pr.find_str(df=german,num_col=germancredit.num_col)
 print("特殊字符:",str_set)
 # 异常字符检测
-special_set = pr.special_char(df=german,feature_col=all_feature)
+special_set = pr.special_char(df=german,feature_col=germancredit.all_feature)
 print("异常字符:",special_set)
 # 异常值检测及处理
 german = pr.outlier(df=german,col="age_in_years",low_percent=0.05,up_percent=0.97,cat_percent=0.001,special_value=None)
 # 删除重复行
 german = pr.drop_dupl(df=german,axis=0)
 # 缺失和众数删除
-delete_col = pr.drop_nan_mode(df=german,nan_percent=0.9,mode_percent=0.95,col_list=all_feature,drop=False)
+delete_col = pr.drop_nan_mode(df=german,nan_percent=0.9,mode_percent=0.95,col_list=germancredit.all_feature,drop=False)
 print("删除变量:",delete_col)
-all_feature = [i for i in all_feature if i not in delete_col]
-num_col = [i for i in num_col if i not in delete_col]
-cat_col = [i for i in cat_col if i not in delete_col]
-int_col = [i for i in int_col if i not in delete_col]
+all_feature = [i for i in germancredit.all_feature if i not in delete_col]
+num_col = [i for i in germancredit.num_col if i not in delete_col]
+cat_col = [i for i in germancredit.cat_col if i not in delete_col]
+int_col = [i for i in germancredit.int_col if i not in delete_col]
 german = german[all_feature+['target']]
 # 缺失填充
 # 类别
@@ -66,7 +68,7 @@ german = pr.fill_nan(df=german,value='-9999',method='mode',col_list=cat_col,min_
 german = pr.fill_nan(df=german,value=-9999,method='mode',col_list=num_col,min_miss_rate=0.05)
 # 保存清洗后的数据
 german['target'] = german['target'].apply(lambda x: 1 if x ==2 else 0)
-german.to_csv("./data/german.csv",index=False,encoding='utf-8')
+
 # 过采样,注意: 随机采样,平衡采样方法无需数值化, 过采样和下采样方法必须数值化
 df,factorize_dict = pr.factor_map(df=german,col_list=cat_col)
 ds = rs.DataSample(df=df,target='target')
