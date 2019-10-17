@@ -186,7 +186,7 @@ def woe_trans(df,bin_dict,trans_feature,target="target"):
     :return: df_woe,new_feature
     """
     df = IC.check_df(df)
-    bin_dict = IC.check_dtypes_list(bin_dict)
+    bin_dict = IC.check_dict_of_df(bin_dict)
     trans_feature = IC.check_list(trans_feature)
     if not set(trans_feature).issubset(set(list(bin_dict.keys()))):
         print("bin_dict.key",bin_dict.keys(),'\n')
@@ -198,7 +198,7 @@ def woe_trans(df,bin_dict,trans_feature,target="target"):
     df_woe = woebin_ply(dt=dt,bins=bin_dict)
     new_feature = [i+"_woe" for i in trans_feature]
 
-    if set(new_feature).issubset(set(df_woe.columns.difference([target]).tolist())):
+    if not set(new_feature).issubset(set(df_woe.columns.difference([target]).tolist())):
         warnings.warn("new feature not in df_woe.columns, Please double check feature set")
         raise SystemExit(0)
 
@@ -234,7 +234,7 @@ class WoeBinPlot(object):
             plt.savefig(str(key)+'.png')
         """
         features = IC.check_list(features)
-        if set(features).issubset(set(list(self._bins.keys()))):
+        if not set(features).issubset(set(list(self._bins.keys()))):
             print("bin_dict.key", self._bins.keys(), '\n')
             print("features:", features)
             warnings.warn("features not in bin_dict.keys, Please double check feature set")

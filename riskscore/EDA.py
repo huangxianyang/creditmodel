@@ -32,7 +32,7 @@ class BasicStat(object):
         :param include: 'all', list-like of dtypes or None (default)
         :return:feature_describe 字段基本信息
         """
-        x = check_str_list(x)
+        # x = check_str_list(x)
         if x:
             feature_describe = self._df[x].describe(percentiles=percentiles,include=include).T
         else:

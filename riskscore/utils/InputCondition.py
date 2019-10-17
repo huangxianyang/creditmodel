@@ -99,7 +99,7 @@ def check_float_list(params):
             raise Exception("Incorrect inputs; parameter should be a list-like of float.")
         else:
             for each in params:
-                if not isinstance(each, float):
+                if not isinstance(each, float) and not isinstance(each,int):
                     new_list.append(each)
             if new_list:
                 raise Exception("Incorrect inputs; parameter should be a list-like of float.")
