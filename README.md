@@ -1,8 +1,8 @@
 ## 风险评分卡构建全流程
 
 ## 安装方式:
-## pip install creditmodel==1.0
+### pip install riskscore==1.0
 
-### 主要功能
+## 主要功能
 #### 数据导入, 数据探索分析, 数据清洗, 特征工程, 模型训练, 模型报告
 #### 使用示例见example.py
