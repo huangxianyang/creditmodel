@@ -1,0 +1,25 @@
+scorecardpy: 依赖库
+function 文件下封装评分卡建模过程中常用函数,耦合度低,可单独独立调用,主要有以下文件:
+ETL.py 链接数据源,函数load_mysql()支持mysql数据库连接, 函数 load_local 支持本地excel csv pkl txt等文件格式读入,save_data 保存文件
+EDA.py 数据探索分析,BasicStatistics.feature_describe:特征描述统计,包括众数,缺失,最大,最小,分位数,标准差等;
+                    BasicStatistics.data_report: 数据探索分析报告, 包括基本统计,字段分布直方图,方差,相关性指标等.
+                    Plot作图类: draw_pie-饼图,draw_bar-条形图,drawHistogram-密度直方图,missing-缺失值可视化,plot_scatter-散点图,
+                    mult_boxplots-箱线图.
+ preprocessing.py 数据预处理,Data_sample 数据抽样类: balance_sample-平衡类别抽样,random_sample 随机抽样,unsample-比例抽样;
+                             DataConcat 表连接类: concat-表叠加,merge-表连接;PreprocessData 数据预处理类: split_col-特征分类,                                  Re_st r-字符识别,replace_data-字符替换,dropDuplicate-删除重复行(列),count_miss_mode-缺失统计,                                     drop_nan_mode-删除缺失,fill_nan-缺失处理,factor_data-数值化.
+ FeatureEngineering.py 特征工程: ScoreCard 评分卡特征工程: cat_feature_bin-分类特征组合,monoto_check-单调性检验,
+                                                           num_feature_bin-连续特征分箱,self_bin_dict-自定义分箱,
+                                                           hight_iv-基于IV特征选择,feature_importance-基于随机森林特征选择,
+                                                           woe_transfer-woe编码,collinear_check-共线性检验,caculate_vif-VIF计算
+                                                           select_feature_L1-基于l1正则化特征选择,remove_no_explan-自定义特征选择.
+modeling.py 机器学习模型: plot_roc_curve-ROC曲线,best_threshold-基于ks的最佳切分概率,plot_ks_curve-ks曲线,
+                          plot_confusion_matrix-混淆矩阵,class_report-召回率 f1;
+                          ScoreCardModel 评分模型类:search_lr_param 网格参数搜索,validation_l1-交叉验证参数搜索,
+                          create_lr_model-数据模型创建,predict_y-概率预测,model_evaluation-模型评估,scorecard-生成评分卡字典,
+                          card_excel-标准评分卡,predict_score-概率批量转换成分数,
+RiskStrategy.py 风险决策: var_psi-变量psi,stragety_score-评分决策表,score_psi-PSI表
+RiskReport.py 风险报告: 贷后监控, ks,psi
+utils.py: 工具函数,load_pkl-pkl文件加载,groupby_key-合并行,feature_subgroup-特征分组,AssignBin-数据离散化,                                           FeatureMonotone-单调性检验,
+                BinBadRate-类别统计,BadRateMonotone-坏比率单调,Monotone_Merge-合并方案,draw_IV-信息值可视化,get_corr-相关系数计算,
+                search_parma-网格参数搜索(通用),Prob2Score-概率转换分数(通用).
+example_main.py:使用示例, cat_feature.py 分类变量集合
