@@ -1,7 +1,7 @@
-# *riskscore* 
+## *riskscore* 
 #### 风险评分模型
 ## *安装*
-#### pip install riskscore
+### *pip install riskscore*
 ***
 ## *主要功能*
 - 数据导入  DbRead(`mysql中导入`,`mongodb中导入`)
@@ -20,7 +20,7 @@
 # *Example*
 *使用示例: 0.数据探索分析, 1.数据清洗, 2.特征分箱, 3.特征选择, 4.模型训练, 5.评分卡构建, 6.模型评估, 7.模型报告*
 
-```
+```python
 from sklearn.externals import joblib
 import riskscore as rs
 file = './'
