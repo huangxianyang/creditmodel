@@ -1,6 +1,6 @@
 ## *riskscore* 
 #### 风险评分模型
-## *安装*
+## *Install*
 ### *pip install riskscore*
 ***
 ## *主要功能*
