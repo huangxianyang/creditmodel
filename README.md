@@ -20,7 +20,7 @@
 - 风险决策 (`风险策略,稳定性评估PSI,评分决策表,KS`) 
 ***
 # *Example*
-*使用示例: 0.数据探索分析, 1.数据清洗, 2.特征分箱, 3.特征选择, 4.模型训练, 5.评分卡构建, 6.模型评估, 7.模型报告*
+*使用示例: 0.数据探索分析, 1.数据清洗, 2.特征分箱, 3.特征选择, 4.模型训练, 5.评分卡构建, 6.模型评估, 7.风险决策*
 
 ```python
 from sklearn.externals import joblib
@@ -190,7 +190,7 @@ mplt.plot_ks_curve(filename=file)
 mplt.plot_confusion_matrix(labels=[0,1],filename=file)
 df['score'] = sc.score_ply(df=df,only_total_score=True)
 ###############################
-# 7.模型报告
+# 7.风险决策,score cut_off
 ##############################
 cut_off_score = rs.stragety_score(score_df=df,step=25,score="score",label='target',
                                   amount=5000,tenor=6,IRR=0.3,capital_cost=0.08,

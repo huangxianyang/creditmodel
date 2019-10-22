@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 评分卡示例:
-0.数据探索分析,1.数据清洗,2.特征分箱,3.特征选择,4.模型训练,5.评分卡构建,6.模型评估,7.模型报告
+0.数据探索分析,1.数据清洗,2.特征分箱,3.特征选择,4.模型训练,5.评分卡构建,6.模型评估,7.风险决策
 """
 from sklearn.externals import joblib
 import riskscore as rs
@@ -170,7 +170,9 @@ mplt.plot_ks_curve(filename=file)
 mplt.plot_confusion_matrix(labels=[0,1],filename=file)
 df['score'] = sc.score_ply(df=df,only_total_score=True)
 ###############################
-# 7.模型报告
+# 7.风险决策, score cut_off
 ##############################
-cut_off_score = rs.stragety_score(score_df=df,step=25,score="score",label='target')
+cut_off_score = rs.stragety_score(score_df=df,step=25,score="score",label='target',
+                                  amount=5000,tenor=6,IRR=0.3,capital_cost=0.08,
+                                  guest_cost=100,data_cost=30,bad_loss=0.6)
 cut_off_score.to_excel(file+"cut_off_score.xlsx")
