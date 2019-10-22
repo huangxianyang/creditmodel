@@ -1,7 +1,11 @@
-# *riskscore* 
+## *riskscore* 
 #### 风险评分模型
 ## *Install*
+<<<<<<< HEAD
 #### pip install riskscore
+=======
+### *pip install riskscore*
+>>>>>>> b99c1e0d1f6bc74355de240ba8d6730ddb7ce3ba
 ***
 ## *主要功能*
 - 数据导入  DbRead(`mysql中导入`,`mongodb中导入`)
