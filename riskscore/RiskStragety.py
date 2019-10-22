@@ -5,6 +5,7 @@
 import pandas as pd
 import numpy as np
 from .utils import InputCondition as IC
+import warnings
 
 def caculate_ks(df, score:str, target:str):
     """
@@ -83,19 +84,47 @@ def bin_list(low_line:int,up_line:int,step:int):
     return bin
 
 
-def stragety_score(score_df,low_line:int,up_line:int,step:int,score:str="score",label:str="target"):
+def stragety_score(score_df,step:int,score:str="score",label:str="target",
+                   amount:int=5000,tenor:int=6,IRR:float=0.3,capital_cost:float=0.08,
+                   guest_cost:int=100,data_cost:int=30,bad_loss:float=0.5):
     """
-    分组函数
+    风险决策报表
     :param score_df:dataframe 包括score 和target
     :param score: str 分数字段 默认 score
     :param label : str 目标字段 默认 target
-    :param low_line:int 分组下限
-    :param up_line: int 分组上限
     :param step int 步长
+    :param amount: int 授信额度(支用额度)
+    :param tenor: int 期数
+    :param IRR: float 实际年化
+    :param capital_cost: float 资金成本
+    :param guest_cost: int 获客成本
+    :param data_cost:int 数据成本
+    :param bad_loss: float 坏客户损失率
     :return: 分组结果
     """
     score_df = IC.check_df(score_df)
+    if len([c for c in [score,label] if c in score_df.columns])<2:
+        raise Exception("There score and label not in input data columns")
+
+    if not isinstance(amount,int) or not isinstance(tenor,int) or not isinstance(guest_cost,int) or not isinstance(data_cost,int):
+        warnings.warn("The amount, tenor,guest_cost,data_cost params should be int")
+
+    if not isinstance(IRR,float) or IRR >=1 or IRR <= 0:
+        warnings.warn("The IRR params accepted range is 0~1, params was set to default 0.3")
+        IRR = 0.3
+
+    if not isinstance(capital_cost,float) or capital_cost >=1 or capital_cost <= 0:
+        warnings.warn("The capital_cost params accepted range is 0~1, params was set to default 0.08")
+        capital_cost = 0.08
+
+    if not isinstance(bad_loss,float) or bad_loss > 1 or bad_loss <= 0:
+        warnings.warn("The bad_loss params accepted range is 0~1, params was set to default 0.5")
+        bad_loss = 0.7
+
     #分组
+    low_line = int(score_df[score].min() + step)
+    up_line = int(score_df[score].max() - step)
+
     bin = bin_list(low_line,up_line,step) #分组列表
     # total 每个分数段总计
     temp_df = score_df[score]
@@ -128,8 +157,11 @@ def stragety_score(score_df,low_line:int,up_line:int,step:int,score:str="score",
     df["sum_good_rate"] = df["sum_good"]/good_sum # 累积好比率
     df["sum_bad_rate"] = df["sum_bad"]/bad_sum # 累积坏比率
     df["KS"] = df["sum_bad_rate"] - df["sum_good_rate"] # 区分度ks
-    df["bad_rate"] = df["bad"]/df["total"] #每个分数段的坏比率
+    df["bad_rate"] = df["bad"]/df["total"] # 每个分数段的坏比率
     df["good_rate"] = df["good"]/df["total"] #每个分数段的好比率
+    # 利润 = 好客户获利金额+坏客户回收本金-坏客户损失-资金成本-获客成本-数据成本
+    df["profit"] = df["good"]*amount*(tenor/12)*IRR + df["bad"]*amount*(1-2*bad_loss) \
+                   - df["total"]*amount*capital_cost - df["total"]*(guest_cost+data_cost)
 
     return df
 

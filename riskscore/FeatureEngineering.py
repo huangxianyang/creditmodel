@@ -5,6 +5,7 @@
 2. 基于IV信息值特征选择, 基于重要度特征选择,基于共线性特征选择,
 基于VIF方差膨胀因子特征选择,基于逐步回归特征选择,基于L1正则化特征选择
 """
+import copy
 import warnings
 import time
 import numpy as np
@@ -31,7 +32,7 @@ class FeatureBin(object):
         分箱类属性
         :param df: df
         :param target: str 标签名
-        :param special_values: list, dict, 特殊值, 为list是作用于所有变量, 也可以每个变量指定,
+        :param special_values: list, dict 特殊值, 为list是作用于所有变量, 也可以每个变量指定,
                                例如 {"A":[2600, 9960, "6850%,%missing"],"B":["education", "others%,%missing"]}
         :param breaks_list: list of dict 指定断点,变量指定,例如 {"A":[2600, 9960, "6850%,%missing"],"B":["education", "others%,%missing"]}
         :param min_per_fine_bin: float 初始分箱数,接受范围 0.01-0.2, 默认 0.01,即可初始分箱数为100
@@ -76,7 +77,7 @@ class FeatureBin(object):
 
         # 开始分箱
         for col in bin_feature:
-            bin_dict[col] = woebin(dt=df,y=self._target,x=col,breaks_list=self._breaks_list,special_values=self._special_values,
+            bin_dict[col] = woebin(dt=df[[col,self._target]],y=self._target,x=col,breaks_list=self._breaks_list,special_values=self._special_values,
                                    min_perc_fine_bin=self._min_per_fine_bin,min_perc_coarse_bin=self._min_per_coarse_bin,stop_limit=self._stop_limit,
                                    max_num_bin=max_num_bin,method=self._method)[col]
             var_iv[col] = bin_dict[col]["total_iv"].unique()[0]
@@ -95,9 +96,9 @@ class FeatureBin(object):
         """
         t0 = time.process_time()
         bin_dict,var_iv = {},{}
-        df = self._df
+        df = copy.deepcopy(self._df)
         bin_feature = IC.check_list(bin_feature)
-        df[bin_feature] = df[bin_feature].astype("float") #防止误将分类变量当做连续变量处理
+        df[bin_feature] = df[bin_feature].astype("float") #防止误将分类变量当做连续变量处理,若不是, 调用该函数将报错
 
         if max_num_bin == None:
             max_num_bin = self._max_num_bin
@@ -110,34 +111,41 @@ class FeatureBin(object):
 
         # 开始分箱
         for col in bin_feature:
-            try:
-                if col not in no_mono_feature:
-                    cutOffPoints = woebin(dt=df,y=self._target,x=col,breaks_list=self._breaks_list,special_values=self._special_values,
-                                          min_perc_fine_bin=self._min_per_fine_bin,min_perc_coarse_bin=self._min_per_coarse_bin,stop_limit=self._stop_limit,
-                                          max_num_bin=max_num_bin,method=self._method)[col]["breaks"].tolist()
-                    cutOffPoints = [float(i) for i in cutOffPoints if str(i) not in ['inf','-inf']]  # 切分点
+            if isinstance(self._special_values,dict):
+                special_values = self._special_values[col]
+            else:
+                special_values = self._special_values
+            # 对于唯一值的变量进行跳过
+            unique_values = [v for v in df[col].unique() if v not in special_values]
+            if len(unique_values) ==1:
+                warnings.warn("There are {} columns have only one unique values,{}, which are skipping from this bing.".format(col,unique_values))
+                continue
 
-                    # 单调检验合并方案结果
-                    mono_cutOffPoints = monotonous_bin(df=self._df,col=col,cutOffPoints=cutOffPoints,target=self._target,special_values=self._special_values)
-                else:
-                    mono_cutOffPoints = None
+            if col not in no_mono_feature:
+                cutOffPoints = woebin(dt=df[[col,self._target]],y=self._target,x=col,breaks_list=self._breaks_list,special_values=special_values,
+                                      min_perc_fine_bin=self._min_per_fine_bin,min_perc_coarse_bin=self._min_per_coarse_bin,stop_limit=self._stop_limit,
+                                      max_num_bin=max_num_bin,method=self._method)[col]["breaks"].tolist()
 
-                # 最终方案
-                bin_dict[col] = woebin(dt=self._df,y=self._target,x=col,breaks_list=mono_cutOffPoints,special_values=self._special_values,
-                                          min_perc_fine_bin=self._min_per_fine_bin,min_perc_coarse_bin=self._min_per_coarse_bin,stop_limit=self._stop_limit,
-                                          max_num_bin=max_num_bin,method=self._method)[col]
-                # 保存IV
-                var_iv[col] = bin_dict[col]["total_iv"].unique()[0]
+                cutOffPoints = [float(i) for i in set(cutOffPoints) if str(i) not in ['inf','-inf']]  # 切分点
+                cutOffPoints = sorted([i for i in cutOffPoints if i not in special_values])
 
-            except:
-                print("异常变量 {} 无法通过单调性检验".format(col))
-                # 再次分箱
-                bin_dict[col] = woebin(dt=self._df,y=self._target,x=col,breaks_list=self._breaks_list,special_values=self._special_values,
-                                          min_perc_fine_bin=self._min_per_fine_bin,min_perc_coarse_bin=self._min_per_coarse_bin,stop_limit=self._stop_limit,
-                                          max_num_bin=max_num_bin,method=self._method)[col]
-                print("变量{}的BadRate为{}".format(col,bin_dict[col]['badprob'].tolist()))
-                # 保存IV
-                var_iv[col] = bin_dict[col]["total_iv"].unique()[0]
+                if not cutOffPoints: # 切分点为空
+                    warnings.warn("There are zero cutOffPoint of {} columns from this bing, which select all unique values insert cutOffPoint".format(col))
+                    cutOffPoints = sorted([i for i in df[col].unique() if i not in special_values])
+
+                # 单调检验合并方案结果
+                # mono_cutOffPoints:dict
+                mono_cutOffPoints = monotonous_bin(df=df[[col,self._target]],col=col,cutOffPoints=cutOffPoints,
+                                                   target=self._target,special_values=special_values)
+            else:
+                mono_cutOffPoints = {}
+
+            # 最终方案
+            bin_dict[col] = woebin(dt=df[[col,self._target]],y=self._target,x=col,breaks_list=mono_cutOffPoints,special_values=special_values,
+                                      min_perc_fine_bin=self._min_per_fine_bin,min_perc_coarse_bin=self._min_per_coarse_bin,stop_limit=self._stop_limit,
+                                      max_num_bin=max_num_bin,method=self._method)[col]
+            # 保存IV
+            var_iv[col] = bin_dict[col]["total_iv"].unique()[0]
 
         print("处理完{}个有序数值变量,耗时:{}秒".format(len(bin_feature), (time.process_time() - t0) * 100 / 60))
         return bin_dict, var_iv
@@ -170,7 +178,8 @@ class FeatureBin(object):
         else:
             breaks_list = IC.check_list_of_dict(breaks_list)
 
-        bin_dict[var] = woebin(dt=self._df, y=self._target, x=var, breaks_list=breaks_list, special_values=special_values)[var]
+        bin_dict[var] = woebin(dt=self._df[[var,self._target]], y=self._target, x=var,
+                               breaks_list=breaks_list, special_values=special_values)[var]
         # 保存IV
         var_iv[var] = bin_dict[var]["total_iv"].unique()[0]
 

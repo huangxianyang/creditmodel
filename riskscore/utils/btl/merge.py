@@ -10,8 +10,8 @@ def monotone_merge(df, target, col):
     '''
     合并方案
     :return:将数据集df中，不满足坏样本率单调性的变量col进行合并，使得合并后的新的变量中，坏样本率单调，输出合并方案。
-    例如，col=[Bin 0, Bin 1, Bin 2, Bin 3, Bin 4]是不满足坏样本率单调性的。合并后的col是：
-    [Bin 0&Bin 1, Bin 2, Bin 3, Bin 4].
+    例如，col=[Bin0, Bin1, Bin2, Bin3, Bin4]是不满足坏样本率单调性的。合并后的col是：
+    [Bin0&Bin1, Bin2, Bin3, Bin4].
     合并只能在相邻的箱中进行。
     迭代地寻找最优合并方案。每一步迭代时，都尝试将所有非单调的箱进行合并，每一次尝试的合并都是跟前后箱进行合并再做比较
     '''
@@ -120,8 +120,7 @@ def monotonous_bin(df,col,cutOffPoints,target,special_values):
     #单调性检验
     var_cutoff = {}
     col1 = col + '_Bin'  # 检验单调性
-    df[col1] = df[col].map(lambda x: _AssignBin(x, cutOffPoints=cutOffPoints,
-                                                     special_attribute=special_values))
+    df[col1] = df[col].map(lambda x: _AssignBin(x, cutOffPoints=cutOffPoints,special_attribute=special_values))
     BRM = _BadRateMonotone(df, col1, target, special_attribute=special_values)  # 是否单调
     if not BRM:
         # 合并方案
@@ -130,9 +129,10 @@ def monotonous_bin(df,col,cutOffPoints,target,special_values):
             removed_index = []
             for bin in bin_merged:
                 if len(bin) > 1:
-                    indices = [int(b.replace('Bin ', '')) for b in bin]
+                    indices = [int(b.replace('Bin', '')) for b in bin]
                     removed_index = removed_index + indices[0:-1]
-            removed_point = [cutOffPoints[k] for k in removed_index]
+            removed_point = [cutOffPoints[k] for k in range(len(cutOffPoints)) if k in removed_index]
+            # removed_point = [cutOffPoints[k] for k in removed_index]
             for p in removed_point:
                 cutOffPoints.remove(p)
             var_cutoff[col] = cutOffPoints
@@ -143,11 +143,14 @@ def monotonous_bin(df,col,cutOffPoints,target,special_values):
             removed_index = []
             for bin in bin_merged:
                 if len(bin) > 1:
-                    indices = [int(b.replace('Bin ', '')) for b in bin]
+                    indices = [int(b.replace('Bin', '')) for b in bin]
                     removed_index = removed_index + indices[0:-1]
-            removed_point = [cutOffPoints2[k] for k in removed_index]
+            # print("removed_index:",removed_index) # 调试
+            # print("cutOffPoints2:",cutOffPoints2) # 调试
+            removed_point = [cutOffPoints2[k] for k in range(len(cutOffPoints2)) if k in removed_index]
+            # removed_point = [cutOffPoints2[k] for k in removed_index]
             for p in removed_point:
                 cutOffPoints2.remove(p)
-            cutOffPoints2 = cutOffPoints2 + special_values
+            # cutOffPoints2 = cutOffPoints2 + special_values
             var_cutoff[col] = cutOffPoints2  # 单调性检验结果
     return var_cutoff

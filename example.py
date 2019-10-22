@@ -172,5 +172,5 @@ df['score'] = sc.score_ply(df=df,only_total_score=True)
 ###############################
 # 7.模型报告
 ##############################
-cut_off_score = rs.stragety_score(score_df=df,low_line=500,up_line=750,step=25,score="score",label='target')
+cut_off_score = rs.stragety_score(score_df=df,step=25,score="score",label='target')
 cut_off_score.to_excel(file+"cut_off_score.xlsx")

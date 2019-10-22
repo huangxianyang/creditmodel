@@ -14,22 +14,22 @@ def _AssignBin(x, cutOffPoints, special_attribute=None):
     :param cutOffPoints: list 上述变量的分箱结果，用切分点表示
     :param special_attribute:list  不参与分箱的特殊取值
     :return: 分箱后的对应的第几个箱，从0开始
-    例如, cutOffPoints = [10,20,30], 对于 x = 7, 返回 Bin 0；对于x=23，返回Bin 2； 对于x = 35, return Bin 3。
+    例如, cutOffPoints = [10,20,30], 对于 x = 7, 返回 Bin0；对于x=23，返回Bin2； 对于x = 35, return Bin3。
     对于特殊值，返回的序列数前加"-"
     '''
     cutOffPoints2 = [i for i in cutOffPoints if i not in special_attribute]
     numBin = len(cutOffPoints2)
     if x in special_attribute:
         i = special_attribute.index(x)+1
-        return 'Bin {}'.format(0-i)
+        return 'Bin{}'.format(0-i)
     if x<=cutOffPoints2[0]:
-        return 'Bin 0'
+        return 'Bin0'
     elif x > cutOffPoints2[-1]:
-        return 'Bin {}'.format(numBin)
+        return 'Bin{}'.format(numBin)
     else:
         for i in range(0,numBin):
             if cutOffPoints2[i] < x <=  cutOffPoints2[i+1]:
-                return 'Bin {}'.format(i+1)
+                return 'Bin{}'.format(i+1)
 
 
 def _FeatureMonotone(x):
