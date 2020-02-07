@@ -1,4 +1,4 @@
-# 已停止更新, 请查看risk-model
+# 已停止更新, 请移步risk-model
 # *riskscore* 
 ### 风险评分模型
 ## *Installation*
